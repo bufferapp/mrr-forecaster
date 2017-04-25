@@ -1,4 +1,4 @@
-source('~/Documents/MRR\ Forecaster/data.R')
+source('~/Documents/mrr_forecaster/data.R')
 
 # Get MRR data
 df <- get_mrr_data()
