@@ -1,5 +1,5 @@
 
-NAME = jwinternheimer/mrr_forecaster:beta
+NAME = julheimer/mrr_forecaster:beta
 
 .PHONY: all build run dev
 

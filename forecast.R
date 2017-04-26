@@ -1,9 +1,10 @@
 require(httr)
 require(forecast)
 require(dplyr)
+require(buffer)
 
-LOOKER_API3_CLIENT_ID <- "xxxxxxxxxxxxxxxxxx"
-LOOKER_API3_CLIENT_SECRET <- "xxxxxxxxxxxxxxxxxx"
+LOOKER_API3_CLIENT_ID <- Sys.getenv('LOOKER_API3_CLIENT_ID')
+LOOKER_API3_CLIENT_SECRET <- Sys.getenv('LOOKER_API3_CLIENT_SECRET')
 
 get_data <- function(look_id) {
 
@@ -88,6 +89,51 @@ forecast_to_data_frame <- function(mrr_df, forecast) {
   df
 }
 
+# Create an empty Redshift table
+createEmptyTable <- function(con, tn, df) {
+
+  # Build SQL query
+  sql <- paste0("create table \"",tn,"\" (",paste0(collapse=',','"',names(df),'" ',sapply(df[0,],postgresqlDataType)),");");
+
+  # Execute query
+  dbSendQuery(con,sql)
+
+  invisible()
+}
+
+# Fill the empty redshift table
+insertBatch <- function(con,tn,df,size=100L) {
+  cnt <- (nrow(df)-1L)%/%size+1L
+
+  for (i in seq(0L,len=cnt)) {
+    sql <- paste0("insert into \"",tn,"\" values (",do.call(paste,c(sep=',',collapse='),(',lapply(df[seq(i*size+1L,min(nrow(df),(i+1L)*size)),],shQuote))),");");
+    dbSendQuery(con,sql);
+  }
+
+}
+
+# Write the results to a table in Reshift
+write_to_redshift <- function(df) {
+
+  print("Writing to Redshift...")
+
+  # Connect to Redshift
+  con <- redshift_connect()
+
+  # Delete existing table
+  print("Dropping old table...")
+  delete_query <- "drop table mrr_predictions"
+  query_db(delete_query, con)
+
+  # Insert new forecast table
+  print("Creating empty table...")
+  createEmptyTable(con, 'mrr_predictions', df)
+
+  print("Inserting data...")
+  insertBatch(con, 'mrr_predictions', df)
+  print("Bloop! Done!")
+}
+
 # Get MRR data
 df <- get_data(look_id = 3701)
 
@@ -101,5 +147,5 @@ fcast <- get_forecast(df, h, frequency)
 # Convert forecast object into data frame
 forecasts_df <- forecast_to_data_frame(df, fcast)
 
-# Print results
-print(forecasts_df)
+# Write to redshift
+write_to_redshift(forecasts_df)
