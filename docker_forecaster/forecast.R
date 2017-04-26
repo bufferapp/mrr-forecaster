@@ -2,8 +2,8 @@ require(httr)
 require(forecast)
 require(dplyr)
 
-LOOKER_API3_CLIENT_ID <- "xxxxxxxxxxxxxxxxxxx"
-LOOKER_API3_CLIENT_SECRET <- "xxxxxxxxxxxxxxxxxxx"
+LOOKER_API3_CLIENT_ID <- "xxxxxxxxxxxxxxxxxx"
+LOOKER_API3_CLIENT_SECRET <- "xxxxxxxxxxxxxxxxxx"
 
 get_data <- function(look_id) {
 
