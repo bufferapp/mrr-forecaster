@@ -2,6 +2,7 @@ require(httr)
 require(forecast)
 require(dplyr)
 require(buffer)
+require(cronR)
 
 LOOKER_API3_CLIENT_ID <- Sys.getenv('LOOKER_API3_CLIENT_ID')
 LOOKER_API3_CLIENT_SECRET <- Sys.getenv('LOOKER_API3_CLIENT_SECRET')
@@ -74,7 +75,7 @@ forecast_to_data_frame <- function(mrr_df, forecast) {
   names(fc) <- c('forecast','lo_80','hi_80','lo_95','hi_95')
 
   # Set dates
-  fc$date = Sys.Date() -179 + as.numeric(time(fcast$mean) * 7) - 7
+  fc$date = Sys.Date() -179 + as.numeric(time(forecast$mean) * 7) - 7
 
   # Remove uneccessary columns
   fc <- select(fc, c(date, forecast))
@@ -134,18 +135,23 @@ write_to_redshift <- function(df) {
   print("Bloop! Done!")
 }
 
-# Get MRR data
-df <- get_data(look_id = 3701)
+main <- function() {
 
-# Define how many days out we want to forecast and the seasonality
-h = 90
-frequency = 7
+  # Get MRR data
+  df <- get_data(look_id = 3701)
 
-# Get the forecast object
-fcast <- get_forecast(df, h, frequency)
+  # Define how many days out we want to forecast and the seasonality
+  h = 90
+  frequency = 7
 
-# Convert forecast object into data frame
-forecasts_df <- forecast_to_data_frame(df, fcast)
+  # Get the forecast object
+  fcast <- get_forecast(df, h, frequency)
 
-# Write to redshift
-write_to_redshift(forecasts_df)
+  # Convert forecast object into data frame
+  forecasts_df <- forecast_to_data_frame(df, fcast)
+
+  # Write to redshift
+  write_to_redshift(forecasts_df)
+}
+
+main()
