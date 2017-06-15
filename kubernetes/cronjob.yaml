@@ -1,0 +1,53 @@
+apiVersion: batch/v2alpha1
+kind: CronJob
+metadata:
+  name: mrr-forecaster
+spec:
+  schedule: "0 * * * *"
+  successfulJobsHistoryLimit: 10
+  failedJobsHistoryLimit: 10
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: mrr-forecaster
+            image: julheimer/mrr_forecaster:beta
+            env:
+              - name: REDSHIFT_DB_NAME
+                valueFrom:
+                  secretKeyRef:
+                    name: redshift
+                    key: redshift-db-name
+              - name: REDSHIFT_USER
+                valueFrom:
+                  secretKeyRef:
+                    name: redshift
+                    key: redshift-db-user
+              - name: REDSHIFT_ENDPOINT
+                valueFrom:
+                  secretKeyRef:
+                    name: redshift
+                    key: redshift-endpoint
+              - name: REDSHIFT_PASSWORD
+                valueFrom:
+                  secretKeyRef:
+                    name: redshift
+                    key: redshift-password
+              - name: REDSHIFT_DB_PORT
+                valueFrom:
+                  secretKeyRef:
+                    name: redshift
+                    key: redshift-db-port
+              - name: LOOKER_API3_CLIENT_ID
+                valueFrom:
+                  secretKeyRef:
+                    name: looker
+                    key: looker-api3-client-id
+              - name: LOOKER_API3_CLIENT_SECRET
+                valueFrom:
+                  secretKeyRef:
+                    name: looker
+                    key: looker-api3-client-secret
+            imagePullPolicy: Always
+          restartPolicy: OnFailure
