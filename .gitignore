@@ -3,4 +3,4 @@
 .RData
 .Ruserdata
 .env
-.csv
+*.csv
