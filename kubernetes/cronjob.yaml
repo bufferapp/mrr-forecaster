@@ -18,36 +18,36 @@ spec:
                 valueFrom:
                   secretKeyRef:
                     name: redshift
-                    key: redshift-db-name
+                    key: database
               - name: REDSHIFT_USER
                 valueFrom:
                   secretKeyRef:
                     name: redshift
-                    key: redshift-db-user
+                    key: user
               - name: REDSHIFT_ENDPOINT
                 valueFrom:
                   secretKeyRef:
                     name: redshift
-                    key: redshift-endpoint
+                    key: endpoint
               - name: REDSHIFT_PASSWORD
                 valueFrom:
                   secretKeyRef:
                     name: redshift
-                    key: redshift-password
+                    key: password
               - name: REDSHIFT_DB_PORT
                 valueFrom:
                   secretKeyRef:
                     name: redshift
-                    key: redshift-db-port
+                    key: port
               - name: LOOKER_API3_CLIENT_ID
                 valueFrom:
                   secretKeyRef:
                     name: looker
-                    key: looker-api3-client-id
+                    key: client-id
               - name: LOOKER_API3_CLIENT_SECRET
                 valueFrom:
                   secretKeyRef:
                     name: looker
-                    key: looker-api3-client-secret
+                    key: client-secret
             imagePullPolicy: Always
           restartPolicy: OnFailure
