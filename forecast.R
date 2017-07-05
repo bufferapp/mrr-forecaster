@@ -2,7 +2,6 @@ require(httr)
 require(forecast)
 require(dplyr)
 require(buffer)
-require(cronR)
 
 LOOKER_API3_CLIENT_ID <- Sys.getenv('LOOKER_API3_CLIENT_ID')
 LOOKER_API3_CLIENT_SECRET <- Sys.getenv('LOOKER_API3_CLIENT_SECRET')
@@ -32,13 +31,13 @@ get_data <- function(look_id) {
   df <- read.csv(con, header = T)
 
   # Rename columns
-  colnames(df) <- c('date','mrr')
+  colnames(df) <- c('forecast_moment_at','forecasted_value')
 
   # Set dates as date object
-  df$date <- as.Date(df$date)
+  df$forecast_moment_at <- as.Date(df$forecast_moment_at)
 
-  # Set mrr as type numeric
-  df$mrr <- as.numeric(as.character(df$mrr))
+  # Set forecasted value as type numeric
+  df$forecasted_value <- as.numeric(as.character(df$forecasted_value))
 
   # Return the dataframe
   df
@@ -49,10 +48,10 @@ get_forecast <- function(df, h=h, freq) {
   print("Getting forecasts...")
 
   # Make sure data is ordered by date
-  df <- df %>% arrange(date)
+  df <- df %>% arrange(forecast_moment_at)
 
   # Create timeseries object
-  ts <- ts(df$mrr, frequency=freq)
+  ts <- ts(df$forecasted_value, frequency=freq)
 
   # Fit exponential smoothing algorithm
   etsfit <- ets(ts)
@@ -75,19 +74,33 @@ forecast_to_data_frame <- function(mrr_df, forecast) {
   names(fc) <- c('forecast','lo_80','hi_80','lo_95','hi_95')
 
   # Set dates
-  fc$date = Sys.Date() -179 + as.numeric(time(forecast$mean) * 7) - 7
+  fc$forecast_moment_at = Sys.Date() -180 + as.numeric(time(forecast$mean) * 7) - 7
 
   # Remove uneccessary columns
-  fc <- select(fc, c(date, forecast))
+  fc <- select(fc, c(forecast_moment_at, forecast))
 
   # Rename the columns
-  colnames(fc) <- c('date', 'mrr')
+  colnames(fc) <- c('forecast_moment_at', 'forecasted_value')
 
   # Bind the historic MRR values and the forecasts
   df <- rbind(mrr_df, fc)
 
   # Return the data frame
   df
+}
+
+get_old_forecasts <- function() {
+
+  # Connect to redshift
+  con <- redshift_connect()
+
+  # Get old results
+  old_df <- query_db("select * from mrr_predictions", con)
+  
+  # Set column names
+  colnames(old_df) <- c('forecast_moment_at', 'forecasted_value', 'created_at')
+
+  old_df
 }
 
 # Create an empty Redshift table
@@ -150,8 +163,17 @@ main <- function() {
   # Convert forecast object into data frame
   forecasts_df <- forecast_to_data_frame(df, fcast)
 
+  # Add the forecast date
+  forecasts_df$created_at <- Sys.Date()
+
+  # Get old forecasts
+  old_forecasts <- get_old_forecasts()
+
+  # Bind new and old
+  forecasts <- unique(rbind(forecasts_df, old_forecasts))
+
   # Write to redshift
-  write_to_redshift(forecasts_df)
+  write_to_redshift(forecasts)
 }
 
 main()

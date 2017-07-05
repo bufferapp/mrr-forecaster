@@ -6,7 +6,6 @@ RUN install2.r --error \
     forecast \
   && installGithub.r \
     jwinternheimer/buffer \
-    bnosac/cronR \
   && rm -rf /tmp/downloaded_packages/ /tmp/*.rds
 
 ADD forecast.R forecast.R

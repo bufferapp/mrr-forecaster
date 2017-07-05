@@ -3,8 +3,8 @@ kind: CronJob
 metadata:
   name: mrr-forecaster
 spec:
-  schedule: "0 * * * *"
-  successfulJobsHistoryLimit: 10
+  schedule: "0 14 * * *"
+  successfulJobsHistoryLimit: 1
   failedJobsHistoryLimit: 10
   jobTemplate:
     spec:
@@ -12,7 +12,7 @@ spec:
         spec:
           containers:
           - name: mrr-forecaster
-            image: julheimer/mrr_forecaster:beta
+            image: julheimer/mrr_forecaster:0.1.0
             env:
               - name: REDSHIFT_DB_NAME
                 valueFrom:
