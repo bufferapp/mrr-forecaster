@@ -29,7 +29,7 @@ clean_data <- function(df) {
 # function to get the forecasted values
 get_forecast <- function(df, h = 90, freq = 7) {
   
-  
+
   # arrage data by date
   df <- df %>% arrange(forecast_moment_at)
   
@@ -152,5 +152,3 @@ main <- function() {
   
   write_to_redshift(all_forecasts)
 }
-
-main()
