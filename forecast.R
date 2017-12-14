@@ -85,7 +85,7 @@ get_old_forecasts <- function() {
   con <- redshift_connect()
 
   # get old results
-  old_df <- query_db("select * from mrr_predictions", con)
+  old_df <- query_db("select * from mrr_predictions where created_at < current_date", con)
 
   # set column names
   colnames(old_df) <- c('forecast_moment_at', 'forecasted_value', 'created_at')
