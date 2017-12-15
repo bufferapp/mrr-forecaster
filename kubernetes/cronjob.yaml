@@ -3,7 +3,7 @@ kind: CronJob
 metadata:
   name: mrr-forecaster
 spec:
-  schedule: "0 14 * * *"
+  schedule: "0 15 * * *"
   successfulJobsHistoryLimit: 1
   failedJobsHistoryLimit: 10
   jobTemplate:
