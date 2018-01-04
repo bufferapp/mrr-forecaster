@@ -55,10 +55,10 @@ get_forecast <- function(df, h = 90, freq = 7) {
   fcast_df <- as.data.frame(fcast)
 
   # get the dates
-  forecast_dates <- date_decimal(as.numeric(row.names(fcast_df)), tz = 'UTC')
+  forecast_dates <- date_decimal(as.numeric(row.names(fcast_df)), tz = 'UTC') 
 
   # set as date object
-  forecast_dates <- as.Date(forecast_dates, format = '%Y-%m-%d')
+  forecast_dates <- as.Date(forecast_dates, format = '%Y-%m-%d') + 1
 
   # create a date column
   fcast_df$forecast_moment_at <- forecast_dates
