@@ -146,11 +146,11 @@ main <- function() {
   df <- clean_data(df)
 
   forecast_df <- get_forecast(df)
-  old_forecasts <- get_old_forecasts()
+  #old_forecasts <- get_old_forecasts()
 
-  all_forecasts <- rbind(forecast_df, old_forecasts)
+  #all_forecasts <- rbind(forecast_df, old_forecasts)
 
-  write_to_redshift(all_forecasts)
+  write_to_redshift(forecast_df)
 }
 
 main()
