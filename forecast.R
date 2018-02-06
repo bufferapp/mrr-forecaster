@@ -1,5 +1,13 @@
 # load libraries
-library(httr); library(forecast); library(dplyr); library(buffer); library(lubridate)
+library(httr)
+library(forecast)
+library(dplyr)
+library(buffer)
+library(lubridate)
+library(DBI)
+library(RPostgres)
+library(aws.s3)
+library(redshiftTools)
 
 # get looker creds
 LOOKER_API3_CLIENT_ID <- Sys.getenv('LOOKER_API3_CLIENT_ID')
@@ -94,51 +102,6 @@ get_old_forecasts <- function() {
   old_df
 }
 
-# create an empty Redshift table
-createEmptyTable <- function(con, tn, df) {
-
-  # Build SQL query
-  sql <- paste0("create table \"",tn,"\" (",paste0(collapse=',','"',names(df),'" ',sapply(df[0,],postgresqlDataType)),");");
-
-  # Execute query
-  dbSendQuery(con,sql)
-
-  invisible()
-}
-
-# fill the empty redshift table
-insertBatch <- function(con, tn, df, size = 100L) {
-  cnt <- (nrow(df)-1L)%/%size+1L
-
-  for (i in seq(0L,len=cnt)) {
-    sql <- paste0("insert into \"",tn,"\" values (",do.call(paste,c(sep=',',collapse='),(',lapply(df[seq(i*size+1L,min(nrow(df),(i+1L)*size)),],shQuote))),");");
-    dbSendQuery(con,sql);
-  }
-
-}
-
-# write the results to a table in Reshift
-write_to_redshift <- function(df) {
-
-  print("Writing to Redshift...")
-
-  # connect to Redshift
-  con <- redshift_connect()
-
-  # delete existing table
-  print("Dropping old table...")
-  delete_query <- "drop table mrr_predictions"
-  query_db(delete_query, con)
-
-  # insert new forecast table
-  print("Creating empty table...")
-  createEmptyTable(con, 'mrr_predictions', df)
-
-  print("Inserting data...")
-  insertBatch(con, 'mrr_predictions', df)
-  print("Bloop! Done!")
-}
-
 # the function that does it all
 main <- function() {
 
@@ -146,11 +109,14 @@ main <- function() {
   df <- clean_data(df)
 
   forecast_df <- get_forecast(df)
-  #old_forecasts <- get_old_forecasts()
+  # old_forecasts <- get_old_forecasts()
 
-  #all_forecasts <- rbind(forecast_df, old_forecasts)
+  # all_forecasts <- rbind(forecast_df, old_forecasts)
 
-  write_to_redshift(forecast_df)
+  buffer::write_to_redshift(forecast_df, "mrr_predictions", "mrr-predictions", 
+                    option = "upsert", keys = c("created_at"))
 }
 
 main()
+
+detach("package:lubridate", unload=TRUE)
