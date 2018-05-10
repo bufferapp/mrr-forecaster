@@ -2,6 +2,7 @@
 library(httr)
 library(forecast)
 library(dplyr)
+library(tidyr)
 library(buffer)
 library(lubridate)
 library(DBI)
@@ -13,36 +14,45 @@ library(redshiftTools)
 LOOKER_API3_CLIENT_ID <- Sys.getenv('LOOKER_API3_CLIENT_ID')
 LOOKER_API3_CLIENT_SECRET <- Sys.getenv('LOOKER_API3_CLIENT_SECRET')
 
-# function to retrieve data from looker
-get_mrr_data <- function() {
+# retrieve data from looker
+get_mrr <- function() {
 
   # get data from looker
-  df <- get_look(4106)
+  mrr <- get_look(4468)
 
 }
 
 # function to clean data
-clean_data <- function(df) {
+clean_data <- function(mrr) {
 
   # rename columns
-  colnames(df) <- c('forecast_moment_at', 'forecasted_value')
+  colnames(mrr) <- c('date', 'gateway', 'mrr')
 
   # set dates as date object
-  df$forecast_moment_at <- as.Date(df$forecast_moment_at, format = '%Y-%m-%d')
+  mrr$date <- as.Date(mrr$date, format = '%Y-%m-%d')
+  
+  # fill in any missing values
+  mrr <- mrr %>% 
+    complete(date, gateway, fill = list(mrr = NA))
+  
+  # aggregate mrr for each day (and omit NAs)
+  by_day <- mrr %>% 
+    group_by(date) %>% 
+    summarise(point_forecast = sum(mrr)) %>% 
+    na.omit()
 
   # return the cleaned data
-  return(df)
+  return(by_day)
 }
 
-# function to get the forecasted values
-get_forecast <- function(df, h = 90, freq = 7) {
-
+# forecast revenue 90 days into the future
+forecast_revenue <- function(mrr, h = 90, freq = 7) {
 
   # arrage data by date
-  df <- df %>% arrange(forecast_moment_at)
+  df <- mrr %>% arrange(date)
 
   # get the first date in the dataset
-  min_date <- min(df$forecast_moment_at)
+  min_date <- min(df$date)
 
   # get the year of the min_date
   yr <- year(min_date)
@@ -51,37 +61,37 @@ get_forecast <- function(df, h = 90, freq = 7) {
   day_of_year <- yday(min_date)
 
   # create timeseries object
-  ts <- ts(df$forecasted_value, frequency = 365.25, start = c(yr, day_of_year))
+  ts <- ts(df$point_forecast, frequency = 365.25, start = c(yr, day_of_year))
 
   # fit exponential smoothing algorithm to data
   etsfit <- ets(ts)
 
-  # get forecast object
+  # get forecast 
   fcast <- forecast(etsfit, h = h, frequency = freq)
 
   # convert to a data frame
   fcast_df <- as.data.frame(fcast)
 
-  # get the dates
+  # get the forecast dates
   forecast_dates <- date_decimal(as.numeric(row.names(fcast_df)), tz = 'UTC') 
 
   # set as date object
   forecast_dates <- as.Date(forecast_dates, format = '%Y-%m-%d') + 1
 
   # create a date column
-  fcast_df$forecast_moment_at <- forecast_dates
+  fcast_df$date <- forecast_dates
 
   # rename columns of data frame
-  names(fcast_df) <- c('forecasted_value','lo_80','hi_80','lo_95','hi_95', 'forecast_moment_at')
+  names(fcast_df) <- c('point_forecast','lo_80','hi_80','lo_95','hi_95', 'date')
 
   # select only date and forecast
-  fcast_df <- select(fcast_df, c(forecast_moment_at, forecasted_value))
+  fcast_df <- select(fcast_df, c(date, point_forecast))
 
   # bind the historic MRR values and the forecasts
   new_df <- rbind(df, fcast_df)
 
   # set created_at date
-  new_df$created_at <- Sys.Date()
+  new_df$forecast_created_at <- Sys.Date()
 
   # return the new data frame
   new_df
@@ -102,19 +112,19 @@ get_old_forecasts <- function() {
   old_df
 }
 
-# the function that does it all
+
 main <- function() {
 
-  df <- get_mrr_data()
+  df <- get_mrr()
   df <- clean_data(df)
 
-  forecast_df <- get_forecast(df)
+  forecast_df <- forecast_revenue(df)
+  
   # old_forecasts <- get_old_forecasts()
-
   # all_forecasts <- rbind(forecast_df, old_forecasts)
 
-  buffer::write_to_redshift(forecast_df, "mrr_predictions", "mrr-predictions", 
-                    option = "upsert", keys = c("created_at"))
+  buffer::write_to_redshift(forecast_df, "revenue_forecasts", "revenue-forecasts", 
+                    option = "replace", keys = c("forecast_created_at"))
 }
 
 main()

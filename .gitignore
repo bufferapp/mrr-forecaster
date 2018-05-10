@@ -4,3 +4,5 @@
 .Ruserdata
 .env
 *.csv
+
+RedshiftJDBC41-1.1.9.1009.jar
