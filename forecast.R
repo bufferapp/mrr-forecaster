@@ -46,83 +46,44 @@ clean_data <- function(mrr) {
 }
 
 # forecast revenue 90 days into the future
-forecast_revenue <- function(mrr, h = 90, freq = 7) {
+get_forecast <- function(mrr, h = 90, freq = 7) {
 
   # arrage data by date
   df <- mrr %>% arrange(date)
 
-  # get the first date in the dataset
-  min_date <- min(df$date)
-
-  # get the year of the min_date
-  yr <- year(min_date)
-
-  # get the day of year of the min_day
-  day_of_year <- yday(min_date)
-
   # create timeseries object
-  ts <- ts(df$point_forecast, frequency = 365.25, start = c(yr, day_of_year))
-
+  ts <- ts(mrr$point_forecast, frequency = 7)
+  
   # fit exponential smoothing algorithm to data
   etsfit <- ets(ts)
-
+  
   # get forecast 
   fcast <- forecast(etsfit, h = h, frequency = freq)
-
+  
   # convert to a data frame
   fcast_df <- as.data.frame(fcast)
-
+  
   # get the forecast dates
-  forecast_dates <- date_decimal(as.numeric(row.names(fcast_df)), tz = 'UTC') 
-
-  # set as date object
-  forecast_dates <- as.Date(forecast_dates, format = '%Y-%m-%d') + 1
-
-  # create a date column
-  fcast_df$date <- forecast_dates
-
+  fcast_df$date <- seq(max(mrr$date) + 1, max(mrr$date) + h, 1)
+  
   # rename columns of data frame
   names(fcast_df) <- c('point_forecast','lo_80','hi_80','lo_95','hi_95', 'date')
-
-  # select only date and forecast
-  fcast_df <- select(fcast_df, c(date, point_forecast))
-
-  # bind the historic MRR values and the forecasts
-  new_df <- rbind(df, fcast_df)
+  
+  # merge data frames
+  mrr_forecast <- rbind(mrr, select(fcast_df, date, point_forecast))
 
   # set created_at date
-  new_df$forecast_created_at <- Sys.Date()
+  mrr_forecast$forecast_created_at <- Sys.Date()
 
   # return the new data frame
-  new_df
+  mrr_forecast
 }
-
-get_old_forecasts <- function() {
-
-  # connect to redshift
-  con <- redshift_connect()
-
-  # get old results
-  old_df <- query_db("select * from mrr_predictions where created_at < current_date", con)
-
-  # set column names
-  colnames(old_df) <- c('forecast_moment_at', 'forecasted_value', 'created_at')
-
-  # return the old data
-  old_df
-}
-
 
 main <- function() {
 
   df <- get_mrr()
   df <- clean_data(df)
-
-  forecast_df <- forecast_revenue(df)
-  
-  # old_forecasts <- get_old_forecasts()
-  # all_forecasts <- rbind(forecast_df, old_forecasts)
-
+  forecast_df <- get_forecast(df)
   buffer::write_to_redshift(forecast_df, "revenue_forecasts", "revenue-forecasts", 
                     option = "replace", keys = c("forecast_created_at"))
 }
