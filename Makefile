@@ -1,4 +1,3 @@
-
 NAME = julheimer/mrr_forecaster:0.1.0
 
 .PHONY: all build run dev
@@ -8,8 +7,8 @@ all: run
 build:
 	docker build -t $(NAME) .
 
-run:
+run: build
 	docker run -it --rm --env-file ./.env $(NAME)
 
-dev:
+dev: build
 	docker run -v $(PWD):/app -it --rm --env-file ./.env $(NAME)

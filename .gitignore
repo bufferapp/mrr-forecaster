@@ -6,3 +6,5 @@
 *.csv
 
 RedshiftJDBC41-1.1.9.1009.jar
+*.Rproj
+.httr-oauth
