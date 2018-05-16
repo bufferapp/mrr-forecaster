@@ -1,11 +1,11 @@
-apiVersion: batch/v2alpha1
+apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
   name: mrr-forecaster
 spec:
-  schedule: "0 15 * * *"
+  schedule: "50 10 * * *"
   successfulJobsHistoryLimit: 1
-  failedJobsHistoryLimit: 10
+  failedJobsHistoryLimit: 2
   jobTemplate:
     spec:
       template:
@@ -64,5 +64,6 @@ spec:
                   secretKeyRef:
                       name: aws
                       key: default-region
-            imagePullPolicy: Always
+          imagePullSecrets:
+            - name: dockerhub
           restartPolicy: OnFailure
