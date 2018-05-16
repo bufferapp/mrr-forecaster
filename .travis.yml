@@ -1,0 +1,17 @@
+sudo: required
+
+services:
+  - docker
+
+language: r
+
+script:
+  - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
+  - make build
+
+deploy:
+  - provider: script
+    script:
+        - make push
+    on:
+      branch: master
