@@ -23,7 +23,7 @@ The application then writes the model results to Redshift with the `write_to_red
 
 The application has been added to Docker and is run as a cron job in Kubernetes.
 
-To run the application, make sure that you have Looker, Redshift, and AWS credentials in your `.env` file. Then you can run the following two commands.
+To run the application, make sure that you have Looker, Redshift, and AWS credentials in your `.env` file. Then you can run the following command.
 
 ```
 make run
