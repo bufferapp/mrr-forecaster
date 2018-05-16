@@ -1,5 +1,7 @@
 # Revenue Forecaster
 
+[![Build Status](https://travis-ci.org/bufferapp/mrr-forecaster.svg?branch=master)](https://travis-ci.org/bufferapp/mrr-forecaster)
+
 The purpose of this application is to predict what monthly recurring revenue (MRR) will be in the future.
 
 ## Methodology
