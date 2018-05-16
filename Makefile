@@ -16,4 +16,3 @@ dev: build
 
 deploy: push
 	kubectl apply -f kubernetes/cronjob.yaml
-	

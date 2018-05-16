@@ -30,15 +30,15 @@ clean_data <- function(mrr) {
 
   # set dates as date object
   mrr$date <- as.Date(mrr$date, format = '%Y-%m-%d')
-  
+
   # fill in any missing values
-  mrr <- mrr %>% 
+  mrr <- mrr %>%
     complete(date, gateway, fill = list(mrr = NA))
-  
+
   # aggregate mrr for each day (and omit NAs)
-  by_day <- mrr %>% 
-    group_by(date) %>% 
-    summarise(point_forecast = sum(mrr)) %>% 
+  by_day <- mrr %>%
+    group_by(date) %>%
+    summarise(point_forecast = sum(mrr)) %>%
     na.omit()
 
   # return the cleaned data
@@ -53,22 +53,22 @@ get_forecast <- function(mrr, h = 90, freq = 7) {
 
   # create timeseries object
   ts <- ts(mrr$point_forecast, frequency = 7)
-  
+
   # fit exponential smoothing algorithm to data
   etsfit <- ets(ts)
-  
-  # get forecast 
+
+  # get forecast
   fcast <- forecast(etsfit, h = h, frequency = freq)
-  
+
   # convert to a data frame
   fcast_df <- as.data.frame(fcast)
-  
+
   # get the forecast dates
   fcast_df$date <- seq(max(mrr$date) + 1, max(mrr$date) + h, 1)
-  
+
   # rename columns of data frame
   names(fcast_df) <- c('point_forecast','lo_80','hi_80','lo_95','hi_95', 'date')
-  
+
   # merge data frames
   mrr_forecast <- rbind(mrr, select(fcast_df, date, point_forecast))
 
@@ -84,7 +84,7 @@ main <- function() {
   df <- get_mrr()
   df <- clean_data(df)
   forecast_df <- get_forecast(df)
-  buffer::write_to_redshift(forecast_df, "revenue_forecasts", "revenue-forecasts", 
+  buffer::write_to_redshift(forecast_df, "revenue_forecasts", "revenue-forecasts",
                     option = "replace", keys = c("forecast_created_at"))
 }
 

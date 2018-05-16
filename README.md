@@ -29,4 +29,4 @@ To run the application, make sure that you have Looker, Redshift, and AWS creden
 make run
 ```
 
-Hopefully that works! 
+Hopefully that works!
