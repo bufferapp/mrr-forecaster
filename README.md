@@ -8,7 +8,7 @@ The purpose of this application is to predict what monthly recurring revenue (MR
 
 The forecaster works by pulling revenue data in from [this view in Looker](https://looker.buffer.com/looks/4468). The revenue data is aggregated by day and time series object is created.
 
-After the time series object has been created, the forecast fits an exponential smoothing state space model to the data.
+After the time series object has been created, the forecaster fits an exponential smoothing state space model to the data.
 
 ```{r}
 # fit exponential smoothing model
@@ -31,4 +31,4 @@ To run the application, make sure that you have Looker, Redshift, and AWS creden
 make run
 ```
 
-Hopefully that works!
+Let Julian know if you have any thoughts or questions! Feel free to create issues and submit pull requests. :)
