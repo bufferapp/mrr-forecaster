@@ -39,7 +39,8 @@ clean_data <- function(mrr) {
   by_day <- mrr %>%
     group_by(date) %>%
     summarise(point_forecast = sum(mrr)) %>%
-    na.omit()
+    na.omit() %>% 
+    filter(date <= max(date) - 2)
 
   # return the cleaned data
   return(by_day)
@@ -90,4 +91,4 @@ main <- function() {
 
 main()
 
-detach("package:lubridate", unload=TRUE)
+detach("package:lubridate", unload = TRUE)
