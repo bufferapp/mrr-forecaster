@@ -40,7 +40,7 @@ clean_data <- function(mrr) {
     group_by(date) %>%
     summarise(point_forecast = sum(mrr)) %>%
     na.omit() %>% 
-    filter(date <= max(date) - 2)
+    filter(date <= max(date) - 1)
 
   # return the cleaned data
   return(by_day)
