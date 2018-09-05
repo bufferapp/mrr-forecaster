@@ -23,12 +23,17 @@ The application then writes the model results to Redshift with the `write_to_red
 
 ## How it Works
 
-The application has been added to Docker and is run as a cron job in Kubernetes.
 
-To run the application, make sure that you have Looker, Redshift, and AWS credentials in your `.env` file. Then you can run the following command.
+To run the application locally, make sure that you have Looker, Redshift, and AWS credentials in your `.env` file. Then you can run the following command.
 
 ```
 make run
 ```
+
+## Deployment
+
+This project is configured to run as a Kubernetes cron job running on our Apollo Cluster. Pushing to the master branch on GitHub will deploy to production, using Cloud Build.
+
+If you need to deploy manually, make sure you have `gcloud` installed and your authenticated for the `buffer-data` project. Then you can just run `make deploy`.
 
 Let Julian know if you have any thoughts or questions! Feel free to create issues and submit pull requests. :)

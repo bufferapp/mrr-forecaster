@@ -1,4 +1,4 @@
-NAME = bufferapp/mrr-forecaster:0.1.0
+NAME = grc.io/buffer-data/mrr-forecaster:0.2.0
 
 all: run
 
@@ -14,5 +14,5 @@ push: build
 dev: build
 	docker run -v $(PWD):/app -it --rm --env-file .env $(NAME) bash
 
-deploy: push
-	kubectl apply -f kubernetes/cronjob.yaml
+deploy:
+	gcloud builds submit --config cloudbuild.yaml .
