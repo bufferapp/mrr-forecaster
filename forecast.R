@@ -69,12 +69,12 @@ get_forecast <- function(mrr, h = 90, freq = 7) {
 
   # rename columns of data frame
   names(fcast_df) <- c('point_forecast','lo_80','hi_80','lo_95','hi_95', 'date')
-  
-  # set value as int
-  fcast_df$point_forecast <- as.integer(fcast_df$point_forecast)
 
   # merge data frames
   mrr_forecast <- rbind(mrr, select(fcast_df, date, point_forecast))
+  
+  # set value as int
+  mrr_forecast$point_forecast <- as.integer(mrr_forecast$point_forecast)
 
   # set created_at date
   mrr_forecast$forecast_created_at <- Sys.time()
