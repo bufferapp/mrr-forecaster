@@ -69,12 +69,18 @@ get_forecast <- function(mrr, h = 90, freq = 7) {
 
   # rename columns of data frame
   names(fcast_df) <- c('point_forecast','lo_80','hi_80','lo_95','hi_95', 'date')
+  
+  # set value as int
+  fcast_df$point_forecast <- as.integer(fcast_df$point_forecast)
 
   # merge data frames
   mrr_forecast <- rbind(mrr, select(fcast_df, date, point_forecast))
 
   # set created_at date
-  mrr_forecast$forecast_created_at <- Sys.Date()
+  mrr_forecast$forecast_created_at <- Sys.time()
+  
+  # rename columns
+  names(mrr_forecast) <- c('forecast_at', 'forecasted_mrr_value', 'forecast_created_at')
 
   # return the new data frame
   mrr_forecast
@@ -85,8 +91,11 @@ main <- function() {
   df <- get_mrr()
   df <- clean_data(df)
   forecast_df <- get_forecast(df)
-  buffer::write_to_redshift(forecast_df, "revenue_forecasts", "revenue-forecasts",
-                    option = "replace", keys = c("forecast_created_at"))
+  buffer::write_to_redshift(df = forecast_df, 
+                            table_name = "mrr_predictions", 
+                            bucket = "mrr-predictions",
+                            option = "upsert", 
+                            keys = c("forecast_created_at"))
 }
 
 main()
