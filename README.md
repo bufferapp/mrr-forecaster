@@ -1,7 +1,5 @@
 # Revenue Forecaster
 
-[![Build Status](https://travis-ci.org/bufferapp/mrr-forecaster.svg?branch=master)](https://travis-ci.org/bufferapp/mrr-forecaster)
-
 The purpose of this application is to predict what monthly recurring revenue (MRR) will be in the future.
 
 ## Methodology
@@ -22,7 +20,6 @@ The forecast is created from the ETS model with the generic `forecast()` functio
 The application then writes the model results to Redshift with the `write_to_redshift()` function in the `buffer` package.
 
 ## How it Works
-
 
 To run the application locally, make sure that you have Looker, Redshift, and AWS credentials in your `.env` file. Then you can run the following command.
 
